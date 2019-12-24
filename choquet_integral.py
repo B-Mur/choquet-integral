@@ -20,6 +20,7 @@ class ChoquetIntegral:
         self.fm = []
         self.type = []
 
+
     def train_chi(self, x1, l1):
         """
         This trains this instance of your ChoquetIntegral w.r.t x1 and l1.
@@ -35,6 +36,10 @@ class ChoquetIntegral:
         self.M = self.trainSamples.shape[1]
         print("Number Inputs : ", self.N, "; Number Samples : ", self.M)
         self.fm = self.produce_lattice()
+
+        return self
+
+
 
     def chi_quad(self, x2):
         """
@@ -57,6 +62,7 @@ class ChoquetIntegral:
             return ch
         else:
             print("If using sugeno measure, you need to use chi_sugeno.")
+
 
     def produce_lattice(self):
         """
@@ -88,6 +94,7 @@ class ChoquetIntegral:
         for key in index_keys.keys():
             Lattice[key] = g[index_keys[key]]
         return Lattice
+
 
     def build_constraint_matrices(self, index_keys, fm_len):
         """
@@ -134,6 +141,7 @@ class ChoquetIntegral:
 
         return G, h, A, b
 
+
     def get_fm_class_img_coeff(self, Lattice, h, fm_len):  # Lattice is FM_name_and_index, h is the samples, fm_len
         """
         This creates a FM map with the name as the key and the index as the value
@@ -152,6 +160,7 @@ class ChoquetIntegral:
         fm_coeff[Lattice[str(np.sort(pi_i[:n]))]] = h[pi_i[n - 1] - 1]
         np.matmul(fm_coeff, np.transpose(fm_coeff))
         return fm_coeff
+
 
     def get_keys_index(self):
         """
@@ -172,6 +181,7 @@ class ChoquetIntegral:
                 Lattice[str(latt_pt)] = count
                 count = count + 1
         return Lattice
+
 
 if __name__ == '__main__':
     # instatiate ChoquetIntegral object

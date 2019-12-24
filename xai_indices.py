@@ -1,14 +1,91 @@
 import pandas as pd
 import numpy as np
 from itertools import permutations, combinations
+from choquet_integral import ChoquetIntegral
+
+
+def get_layer_vars(fm, l, s):
+    '''
+    This function returns the fm variable indices that are in the current layer that do
+    contain the source of interest.
+
+    :param fm: fuzzy measure
+    :param l:  which layer
+    :param s:  which source
+    :return:   indices of fm variables of interest.
+    '''
+
+    inds = []
+    for key in fm.keys():
+        ind = str(key)
+        ind = ind.strip('][ ').replace(' ', '').split(',')
+        if len(ind[0]) == l:
+            if str(s) not in ind[0]:
+                inds.append(key)
+
+    return inds
+
+
+def get_source_var(fm, curr_inds, s, l):
+    '''
+    This function returns the fm variable indices that are in the previous layer that do not
+    contain the source of interest.
+
+    :param fm: fuzzy measure
+    :param l:  which layer
+    :param s:  which source
+    :return:   indices of fm variables of interest.
+    '''
+    pairs = []
+    for key in fm.keys():
+        for cur in curr_inds:
+            ind = str(key)
+            ind = ind.strip('][ ').replace(' ', '').split(',')[0]
+            cur_ind = cur.strip('][ ').replace(' ', '').split(',')[0]
+            if len(ind) == l:
+                if cur_ind in ind and str(s) in ind:
+                    pairs.append([key, cur])
+
+    return pairs
+
+
+def get_shapl_coef(X, K):
+    val = (np.math.factorial(X - K - 1) * np.math.factorial(K)) / np.math.factorial(X)
+    return val
 
 # These are the walk-centric indices
-def walk_centric_shapley(fm):
+def walk_centric_shapley(fm, data):
+    shapley_values = []
+    seen_vars = harden_variable_visitation(data)
+    num_layers = data.shape[0] + 1
+    num_sources = data.shape[0]
+    # Get the coefficient
+    coefficients = 0
+    # Do the subtractions
+    for s in range(1, num_sources+1):
+        running_sum = 0
+        for l in range(0, num_layers-1):
+            if l == 0:
+                var = str([s])
+                X, K = num_sources, 0
+                coef = get_shapl_coef(X, K)
+                running_sum += coef * (fm[var] - 0)
+            else:
+                curr_inds = get_layer_vars(fm, l, s)
+                pairs = get_source_var(fm, curr_inds, s, l+1)
+                X, K = num_sources, l
+                coef = get_shapl_coef(X, K)
+                for set, seti in pairs:
+                    if seen_vars[seti] == 1 and seen_vars[set] == 1:
+                        running_sum += coef * (fm[seti] - fm[set])
 
+        shapley_values.append(running_sum)
 
+    #TODO normalize running_sum
+    shapley_values = np.asarray(shapley_values)
+    shapley_values = shapley_values / np.sum(shapley_values)
 
-
-    return 0
+    return shapley_values
 
 
 # These are the data-centric indices
@@ -80,15 +157,12 @@ def harden_variable_visitation(data):
     for i in range(1, n + 1):
         current_combos = list(combinations(arr, i))
         for ele in current_combos:
-            fm_variables.append(ele)
-
-    # get all the walks taken
-    vars = {key: 0 for key in fm_variables}
+            fm_variables.append(list(ele))
 
     # how do i count each variable??
     # get all the walks taken
     walk = walk_visitation(data)
-    hard_variables = {key: 0 for key in fm_variables}
+    hard_variables = {str(key).replace(',', ''): 0 for key in fm_variables}
     for key in walk.keys():
         for i in range(0, walk[key]):
             variable_ind = []
@@ -96,8 +170,8 @@ def harden_variable_visitation(data):
                 if val != 0:
                     variable_ind.append(val)
                     variable_ind.sort()
-                    idx = tuple(variable_ind)
-                    vars[idx] = 1
+                    idx = str(variable_ind).replace(',', '')
+                    hard_variables[idx] = 1
 
     return hard_variables
 
@@ -122,6 +196,8 @@ if __name__ == '__main__':
     # create data samples and labels to produce a max aggregation operation
 
     data = np.random.rand(3, 2)
+    labels = np.amax(data, 0) # we're building a max
+
     walks = walk_visitation(data)
     
     percentage_of_walks, walks = percentage_walks(data)
@@ -131,6 +207,16 @@ if __name__ == '__main__':
     percentage_of_variables, vars = percentage_variables(data)
 
     print(f'Percentage of variables seen: {percentage_of_variables}')
+
+    # build chi
+    chi = ChoquetIntegral()
+    chi = chi.train_chi(data, labels)
+
+
+    temp = walk_centric_shapley(chi.fm, data)
+    print(chi.fm)
+
+    print('a')
 
 
 
