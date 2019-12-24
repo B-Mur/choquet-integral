@@ -1,7 +1,7 @@
 import pandas as pd
 import numpy as np
 from itertools import permutations, combinations
-from choquet_integral import ChoquetIntegral
+from ChoquetIntegral.choquet_integral import ChoquetIntegral
 
 
 def get_layer_vars(fm, l, s):
@@ -53,7 +53,9 @@ def get_shapl_coef(X, K):
     val = (np.math.factorial(X - K - 1) * np.math.factorial(K)) / np.math.factorial(X)
     return val
 
+####################################
 # These are the walk-centric indices
+####################################
 def walk_centric_shapley(fm, data):
     shapley_values = []
     seen_vars = harden_variable_visitation(data)
@@ -81,14 +83,14 @@ def walk_centric_shapley(fm, data):
 
         shapley_values.append(running_sum)
 
-    #TODO normalize running_sum
     shapley_values = np.asarray(shapley_values)
     shapley_values = shapley_values / np.sum(shapley_values)
 
     return shapley_values
 
-
+####################################
 # These are the data-centric indices
+####################################
 def walk_visitation(data):
     n = data.shape[0]           # get the number of sources
     r = data.shape[0]           # get the number of items we want combinations
