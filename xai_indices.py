@@ -88,12 +88,14 @@ def walk_centric_shapley(fm, data):
 
     return shapley_values
 
+
 ####################################
 # These are the data-centric indices
 ####################################
 def walk_visitation(data):
     n = data.shape[0]           # get the number of sources
     r = data.shape[0]           # get the number of items we want combinations
+    m = data.shape[1]           # get the number of samples
 
     arr = np.arange(n) + 1             # get the numbers that we'll be getting combos
 
@@ -104,11 +106,16 @@ def walk_visitation(data):
         ind = tuple(np.argsort(data[:,i]) + 1)
         walks[ind] = walks[ind] + 1
 
-    return walks
+    z_walks = walks.copy()
+    for key in walks.keys():
+        z_walks[key] = z_walks[key] / m
+
+
+    return walks, z_walks
 
 
 def percentage_walks(data):
-    walks = walk_visitation(data)
+    walks, z_walks = walk_visitation(data)
     n = data.shape[0]
     observed = 0
     for walk in walks.keys():
@@ -117,8 +124,9 @@ def percentage_walks(data):
 
     possible_walks = np.math.factorial(n)
     percent = observed / possible_walks
+
     
-    return percent, walks
+    return percent, z_walks
 
 
 def variable_visitation(data):
@@ -133,7 +141,7 @@ def variable_visitation(data):
 
     # how do i count each variable??
     # get all the walks taken
-    walk = walk_visitation(data)
+    walk, z_walk = walk_visitation(data)
     vars = {key: 0 for key in fm_variables}
     for key in walk.keys():
         for i in range(0, walk[key]):
@@ -163,7 +171,7 @@ def harden_variable_visitation(data):
 
     # how do i count each variable??
     # get all the walks taken
-    walk = walk_visitation(data)
+    walk, z_walks = walk_visitation(data)
     hard_variables = {str(key).replace(',', ''): 0 for key in fm_variables}
     for key in walk.keys():
         for i in range(0, walk[key]):

@@ -100,8 +100,6 @@ class ChoquetIntegral:
         """
         This method builds the necessary constraint matrices.
 
-
-
         :param index_keys: map to reference lattice components
         :param fm_len: length of the fuzzy measure
         :return: the constraint matrices
