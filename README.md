@@ -36,13 +36,6 @@ run these commands in your own conda environment, and everything should run smoo
     # print out the learned chi variables. (in this case, all 1's) 
     print(chi.fm)
    
-### xai_indices.py
-#### *Description: * These are the XAI indices that we created in \ref
-#### *Examples: *
-# TODO  Walk centric shapley
 
-
-
-## Examples
 
 `
